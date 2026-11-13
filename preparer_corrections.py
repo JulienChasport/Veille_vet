@@ -35,7 +35,8 @@ def main():
         print(f"{len(lignes):4d} corrections -> {cible.relative_to(ICI)}")
         total += len(lignes)
     if not total:
-        print("Aucune correction trouvee : remplissez la colonne 'matiere_corrigee' des CSV dans rapports\\.")
+        print("Aucune correction trouvee : remplissez la colonne 'matiere_corrigee' des CSV dans rapports\\.\n"
+              "(Pas de CSV ? Relancez la veille avec --csv : python veille_vet.py --last-month --csv)")
         return 1
     print(f"\n{total} corrections pretes dans le dossier corrections\\.")
     return 0

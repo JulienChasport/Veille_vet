@@ -15,9 +15,9 @@ Principe : aucun etiquetage manuel necessaire au depart.
      sont reinjectees automatiquement depuis le dossier corrections/ (voir 4_envoyer_corrections.bat).
 
 Exemples :
-    python3 entrainer_modele.py                          # 6 ans d'historique (hors 6 derniers mois)
-    python3 entrainer_modele.py --annees 8
-    python3 entrainer_modele.py --corrections "rapports/*.csv"
+    python entrainer_modele.py                          # 6 ans d'historique (hors 6 derniers mois)
+    python entrainer_modele.py --annees 8
+    python entrainer_modele.py --corrections "rapports/*.csv"
 
 Prerequis : scikit-learn  (pip install scikit-learn)
 """

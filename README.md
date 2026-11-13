@@ -15,12 +15,12 @@ Prérequis : Python 3.8+ et `pip install scikit-learn`.
    probable si elle atteint le **seuil bas de 10 %** (inclusif). Toutes les autres matières à partir de **30 %**
    (`--seuil-secondaire`) sont aussi signalées, et l'article **apparaît dans chacune de ces sections** (marqué « déjà classé en : … »).
    Sous le seuil, l'article va dans « Hors catégories suivies » avec sa meilleure piste, pour ne rien perdre.
-3. **Rapport** : HTML groupé par matière avec les % de confiance, et CSV complet.
+3. **Rapport** : HTML groupé par matière avec les % de confiance (et, avec `--csv`, un CSV complet pour les corrections).
 
 ## Étape 1 — entraîner (une fois)
 
 ```bash
-python3 entrainer_modele.py              # 6 ans d'historique
+python entrainer_modele.py              # 6 ans d'historique
 ```
 Pas d'étiquetage manuel au départ : PubMed fournit les étiquettes. Les articles anciens des 6 revues (chiens/chats, hors
 6 derniers mois) portent des descripteurs MeSH (« Kidney Diseases », « Neoplasms »…) qui servent d'étiquettes automatiques.
@@ -30,18 +30,19 @@ les articles récents. Le script affiche en fin d'entraînement une évaluation 
 ## Étape 2 — lancer la veille
 
 ```bash
-python3 veille_vet.py                    # 7 derniers jours
-python3 veille_vet.py --days 14
-python3 veille_vet.py --last-month       # pour le mensuel
-python3 veille_vet.py --from 2026-10-01 --to 2026-10-31
-python3 veille_vet.py --seuil 0.10       # encore plus permissif
-python3 veille_vet.py --methode mots-cles   # secours sans modèle
+python veille_vet.py                    # 7 derniers jours
+python veille_vet.py --days 14
+python veille_vet.py --last-month       # pour le mensuel
+python veille_vet.py --from 2026-10-01 --to 2026-10-31
+python veille_vet.py --seuil 0.05       # encore plus permissif (défaut : 0.10)
+python veille_vet.py --methode mots-cles   # secours sans modèle
+python veille_vet.py --last-month --csv # ajoute le CSV (pour saisir des corrections)
 ```
-Sorties dans `./rapports/` : `rapport_<début>_<fin>.html` et `.csv`.
+Sorties dans `./rapports/` : `rapport_<début>_<fin>.html` (et `.csv` avec `--csv`).
 
 ## Vérification manuelle et corrections
 
-Le CSV a une colonne **`matiere_corrigee`** vide, et une colonne de probabilité par matière (`p_...`). Remplissez-la pour les
+Lancez la veille avec `--csv` pour obtenir le CSV. Il a une colonne **`matiere_corrigee`** vide, et une colonne de probabilité par matière (`p_...`). Remplissez-la pour les
 articles mal classés (les débuts suffisent : `uro`, `hemato`, `neuro`, `onco`, `gastro`, `pancreas`, `pneumo`, `infect`,
 `endocrino`, ou `autre` ; **plusieurs matières possibles** : `onco+hemato`). Puis double-cliquez sur
 **`4_envoyer_corrections.bat`** : il extrait vos corrections vers `corrections\` (un fichier par rapport, mis à jour sans doublon)

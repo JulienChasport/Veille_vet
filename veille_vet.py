@@ -15,17 +15,18 @@ entrainer_modele.py (a lancer une fois, puis de temps en temps).
 Prerequis : Python 3.8+ et scikit-learn  (pip install scikit-learn)
 
 Exemples :
-    python3 veille_vet.py                       # 7 derniers jours (defaut)
-    python3 veille_vet.py --days 14             # 14 derniers jours
-    python3 veille_vet.py --last-month          # mois calendaire precedent (cron mensuel)
-    python3 veille_vet.py --from 2026-10-01 --to 2026-10-31
-    python3 veille_vet.py --seuil 0.15          # encore plus permissif
-    python3 veille_vet.py --methode mots-cles   # secours, sans modele ni scikit-learn
-    python3 veille_vet.py --last-month --email-to moi@exemple.fr
+    python veille_vet.py                       # 7 derniers jours (defaut)
+    python veille_vet.py --days 14             # 14 derniers jours
+    python veille_vet.py --last-month          # mois calendaire precedent (cron mensuel)
+    python veille_vet.py --from 2026-10-01 --to 2026-10-31
+    python veille_vet.py --seuil 0.15          # encore plus permissif
+    python veille_vet.py --methode mots-cles   # secours, sans modele ni scikit-learn
+    python veille_vet.py --last-month --email-to moi@exemple.fr
+    python veille_vet.py --last-month --csv    # ajoute le CSV pour saisir des corrections
 
 Sorties (dossier ./rapports par defaut) :
     rapport_<debut>_<fin>.html   rapport lisible, groupe par matiere, avec les % de confiance
-    rapport_<debut>_<fin>.csv    tous les articles (retenus ET ecartes), probabilites par matiere,
+    rapport_<debut>_<fin>.csv    (avec --csv) tous les articles, probabilites par matiere,
                                  et une colonne 'matiere_corrigee' a remplir pour la verification
 """
 import argparse
@@ -545,8 +546,8 @@ def build_html(arts, d1, d2, datetype, errors, note=""):
 
 
 def write_csv(path, arts):
-    classes = list(CATEGORIES) + [CLASS_OTHER]
-    cols = ["pmid", "journal", "date", "title", "espece", "retenu", "matiere", "confiance_pct",
+    classes = list(CATEGORIES)          # "Autre" n'a pas de probabilite propre (pas une classe du modele)
+    cols =["pmid", "journal", "date", "title", "espece", "retenu", "matiere", "confiance_pct",
             "matieres_secondaires", "matiere_corrigee", "motif", "doi", "url"] + \
            [f"p_{c}" for c in classes]
     with open(path, "w", newline="", encoding="utf-8-sig") as f:   # utf-8-sig + ';' : ouvre bien dans Excel FR
@@ -606,7 +607,9 @@ def main():
                          f"(defaut : {DEFAULT_SECONDARY}) ; l'article apparait alors aussi dans cette matiere")
     ap.add_argument("--modele", default=str(MODEL_PATH), help="chemin du modele entraine")
     ap.add_argument("--outdir", default="rapports", help="dossier de sortie (defaut : ./rapports)")
-    ap.add_argument("--email-to", help="envoyer le rapport par email (config SMTP_* en variables d'environnement)")
+    ap.add_argument("--csv", action="store_true",
+                    help="ecrire aussi le CSV (probabilites + colonne 'matiere_corrigee' pour les corrections)")
+    ap.add_argument("--email-to",help="envoyer le rapport par email (config SMTP_* en variables d'environnement)")
     ap.add_argument("--from-xml", help="(test) lire un fichier XML PubMed local au lieu d'interroger le reseau")
     args = ap.parse_args()
 
@@ -654,15 +657,19 @@ def main():
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     stem = f"rapport_{d1}_{d2}"
-    html_path, csv_path = outdir / f"{stem}.html", outdir / f"{stem}.csv"
+    html_path = outdir / f"{stem}.html"
     html_path.write_text(build_html(arts, d1, d2, args.datetype, errors, note), encoding="utf-8")
-    write_csv(csv_path, arts)
+    fichiers = [html_path]
+    if args.csv:
+        csv_path = outdir / f"{stem}.csv"
+        write_csv(csv_path, arts)
+        fichiers.append(csv_path)
 
-    log(f"{len(arts)} articles, {len(retenus)} retenus -> {html_path}")
+    log(f"{len(arts)} articles, {len(retenus)} retenus -> {', '.join(map(str, fichiers))}")
     if args.email_to:
         send_email(args.email_to, f"Veille veterinaire {d1} - {d2} ({len(retenus)} articles)",
                    f"{len(retenus)} articles retenus sur {len(arts)} analyses. Rapport en piece jointe.",
-                   [html_path, csv_path])
+                   fichiers)
     print(html_path)
     return 0 if not errors else 3
 
