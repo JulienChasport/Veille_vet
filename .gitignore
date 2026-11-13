@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs
+*.log
+
+# Large generated files (rebuilt by the scripts)
+cache_notices.json
+modele_matieres.joblib
+
+# Generated reports
+rapports/
